@@ -2,7 +2,6 @@ package main
 
 import (
 	"log"
-	"strings"
 
 	"github.com/bwmarrin/discordgo"
 )
@@ -21,10 +20,12 @@ func selectUserHandler(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	var options []discordgo.SelectMenuOption
 	for _, member := range members {
 		// member.User.ID와 member.User.Username을 사용하여 옵션 생성
-		options = append(options, discordgo.SelectMenuOption{
-			Label: member.User.GlobalName,
-			Value: member.User.ID,
-		})
+		if !member.User.Bot {
+			options = append(options, discordgo.SelectMenuOption{
+				Label: member.User.GlobalName,
+				Value: member.User.ID,
+			})
+		}
 	}
 	MinValues := 1
 	MaxValues := len(options)
@@ -37,12 +38,13 @@ func selectUserHandler(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		MaxValues:   MaxValues,
 		Options:     options,
 	}
-
 	actionRow := discordgo.ActionsRow{
 		Components: []discordgo.MessageComponent{
 			selectMenu,
 		},
 	}
+
+	// start_button
 	buttonRow := discordgo.ActionsRow{
 		Components: []discordgo.MessageComponent{
 			&discordgo.Button{
@@ -52,6 +54,8 @@ func selectUserHandler(s *discordgo.Session, i *discordgo.InteractionCreate) {
 			},
 		},
 	}
+
+	//select_all_button
 
 	// 드롭다운 메뉴와 버튼을 포함한 메시지 전송
 	err = s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
@@ -80,15 +84,24 @@ func handleStartButton(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		return
 	}
 
-	// 선택된 멤버 ID를 로그에 출력
-	log.Printf("Selected members : %s", strings.Join(tempSelectedMembers, ", "))
+	king := Get(tempSelectedMembers)
+	var message string
+	for _, v := range tempSelectedMembers {
+		if v == king {
+			message = "당신은 왕 입니다!"
+		} else {
+			message = "당신은 왕이 아닙니다!"
+		}
+		sendPrivateMessage(s, v, message)
+	}
 
 	// Interaction 응답 (선택 결과를 유저에게 표시)
 	err := s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
-		Type: discordgo.InteractionResponseChannelMessageWithSource,
-		Data: &discordgo.InteractionResponseData{
-			Content: "Selected members: " + strings.Join(tempSelectedMembers, ", "),
-		},
+		Type: discordgo.InteractionResponseDeferredMessageUpdate,
+		// Type: discordgo.InteractionResponseChannelMessageWithSource,
+		// Data: &discordgo.InteractionResponseData{
+		// 	Content: content,
+		// },
 	})
 	if err != nil {
 		log.Println("Error responding to interaction:", err)

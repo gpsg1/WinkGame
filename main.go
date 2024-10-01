@@ -9,11 +9,14 @@ import (
 	"github.com/bwmarrin/discordgo"
 )
 
+// TEST_SERVER : 1271088825560727592
+// AZ : 948807733199642645
+
 var (
-	GuildID        = flag.String("guild", "", "")
+	GuildID        = flag.String("guild", "948807733199642645", "")
 	BotToken       = flag.String("token", "", "")
 	RemoveCommands = flag.Bool("rmcmd", true, "Remove all commands after shutdowning or not")
-	appID          = ""
+	// appID          = "1289114539434053652"
 )
 
 var session *discordgo.Session
