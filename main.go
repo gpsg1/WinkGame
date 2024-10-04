@@ -10,13 +10,12 @@ import (
 )
 
 // TEST_SERVER : 1271088825560727592
-// AZ : 948807733199642645
+// AZ Guild : 948807733199642645
 
 var (
-	GuildID        = flag.String("guild", "948807733199642645", "")
 	BotToken       = flag.String("token", "", "")
+	GuildID        = flag.String("guild", "1271088825560727592", "")
 	RemoveCommands = flag.Bool("rmcmd", true, "Remove all commands after shutdowning or not")
-	// appID          = "1289114539434053652"
 )
 
 var session *discordgo.Session
@@ -35,8 +34,8 @@ func init() {
 var (
 	commands = []*discordgo.ApplicationCommand{
 		{
-			Name:        "select",
-			Description: "Select member",
+			Name:        "wink",
+			Description: "Start wink game",
 		},
 	}
 )
@@ -46,7 +45,7 @@ func init() {
 		switch i.Type {
 		case discordgo.InteractionApplicationCommand:
 			switch i.ApplicationCommandData().Name {
-			case "select":
+			case "wink":
 				selectUserHandler(s, i)
 			}
 		case discordgo.InteractionMessageComponent:
@@ -55,6 +54,8 @@ func init() {
 				handleSelectMenu(s, i)
 			case "start_button":
 				handleStartButton(s, i)
+			case "check", "cancel":
+				followUpHandler(s, i)
 			}
 		}
 	})
@@ -64,6 +65,7 @@ func main() {
 	session.AddHandler(func(s *discordgo.Session, r *discordgo.Ready) {
 		log.Printf("Logged in as: %v#%v", s.State.User.Username, s.State.User.Discriminator)
 	})
+
 	err := session.Open()
 	if err != nil {
 		log.Fatalf("Cannot open the session: %v", err)

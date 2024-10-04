@@ -6,11 +6,13 @@ import (
 	"github.com/bwmarrin/discordgo"
 )
 
-var selectedUsersMap = make(map[string][]string)
+var (
+	selectedUsersMap = make(map[string][]string)
+)
 
 func selectUserHandler(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	// 길드 멤버 가져오기
-	members, err := s.GuildMembers(*GuildID, "", 25)
+	members, err := s.GuildMembers(i.GuildID, "", 25)
 	if err != nil {
 		log.Println("Error fetching members:", err)
 		return
@@ -48,14 +50,12 @@ func selectUserHandler(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	buttonRow := discordgo.ActionsRow{
 		Components: []discordgo.MessageComponent{
 			&discordgo.Button{
-				Label:    "Select",                // 버튼 텍스트
+				Label:    "시작",                    // 버튼 텍스트
 				Style:    discordgo.PrimaryButton, // 버튼 스타일
 				CustomID: "start_button",          // 버튼 클릭 시 처리할 ID
 			},
 		},
 	}
-
-	//select_all_button
 
 	// 드롭다운 메뉴와 버튼을 포함한 메시지 전송
 	err = s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
@@ -95,17 +95,15 @@ func handleStartButton(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		sendPrivateMessage(s, v, message)
 	}
 
-	// Interaction 응답 (선택 결과를 유저에게 표시)
 	err := s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
 		Type: discordgo.InteractionResponseDeferredMessageUpdate,
-		// Type: discordgo.InteractionResponseChannelMessageWithSource,
-		// Data: &discordgo.InteractionResponseData{
-		// 	Content: content,
-		// },
 	})
 	if err != nil {
 		log.Println("Error responding to interaction:", err)
+		return
 	}
+
+	createFollowUpMessage(s, i)
 }
 
 func handleSelectMenu(s *discordgo.Session, i *discordgo.InteractionCreate) {
