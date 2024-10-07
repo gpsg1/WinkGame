@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"strconv"
+	"strings"
 
 	"github.com/bwmarrin/discordgo"
 )
@@ -61,14 +62,26 @@ func followUpHandler(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		}
 	}
 
-	// 기존 임베드 가져오기 및 업데이트
-	embed := &discordgo.MessageEmbed{
-		Title: "게임 진행 중...",
-		Description: fmt.Sprintf(
-			"윙크를 받으셨으면 V 버튼을 클릭 해 주세요!\n\n실수로 V 했을 경우 X 버튼으로 취소 해 주세요!\n\n현재 윙크 받은 사람 수: %d / %d\n\n**확인한 유저:**\n%s\n**확인하지 못한 유저:**\n%s",
-			checkedCount, totalParticipants, checkedUsersList, uncheckedUsersList,
-		),
-		Color: 0x00ff00,
+	// 남은 사람이 한 명일 경우 처리
+	var embed *discordgo.MessageEmbed
+	if checkedCount == totalParticipants-1 {
+		lastUserName := uncheckedUsersList
+		embed = &discordgo.MessageEmbed{
+			Title: "마지막 남은 사람!\n",
+			Description: fmt.Sprintf(
+				"%s님, 당신이 마지막 사람입니다.\n\n왕일 것 같은 사람을 지목해주세요!", strings.ReplaceAll(lastUserName, "\n", ""),
+			),
+			Color: 0xff0000, // 다른 색으로 표시
+		}
+	} else {
+		embed = &discordgo.MessageEmbed{
+			Title: "게임 진행 중...\n",
+			Description: fmt.Sprintf(
+				"윙크를 받으셨으면 V 버튼을 클릭 해 주세요!\n\n실수로 V 했을 경우 X 버튼으로 취소 해 주세요!\n\n**현재 윙크 받은 사람 수 :** %d / %d\n\n**확인한 유저 :**\n%s\n**확인하지 못한 유저 :**\n%s",
+				checkedCount, totalParticipants, checkedUsersList, uncheckedUsersList,
+			),
+			Color: 0x00ff00,
+		}
 	}
 
 	// 상호작용 응답 지연 후 아래 메시지 수정 진행
@@ -81,7 +94,7 @@ func followUpHandler(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	}
 
 	// 메시지 수정
-	content := fmt.Sprintf("'%s'이(가) %s했습니다.", userGlobalName, action)
+	content := fmt.Sprintf("'%s'이(가) %s했습니다.\n", userGlobalName, action)
 	_, err = s.ChannelMessageEditComplex(&discordgo.MessageEdit{
 		Channel:    i.ChannelID,
 		ID:         messageID,
@@ -101,7 +114,7 @@ func createFollowUpMessage(s *discordgo.Session, i *discordgo.InteractionCreate)
 
 	embed := &discordgo.MessageEmbed{
 		Title:       "게임 시작!",
-		Description: "윙크를 받으셨으면 V 버튼을 클릭 해 주세요!\n\n실수로 V 했을 경우 X 버튼으로 취소 해 주세요!\n\n현재 윙크 받은 사람 수: 0 / " + strconv.Itoa(totalParticipants),
+		Description: "윙크를 받으셨으면 V 버튼을 클릭 해 주세요!\n\n실수로 V 했을 경우 X 버튼으로 취소 해 주세요!\n\n**현재 윙크 받은 사람 수 :** 0 / " + strconv.Itoa(totalParticipants),
 		Color:       0x00ff00,
 	}
 
